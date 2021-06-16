@@ -3,8 +3,13 @@
         <div v-show='!isHide'>
             <span>{{numPtn}}</span>
             <div style="height:20rem">
-                <div v-for='(n,idx) in num' :key = 'idx' style = "display:inline-block" class="px-3 py-2">
-                    <b-icon :icon='classSymbol' font-scale='3'></b-icon>
+                <div v-if='numPtn=="Ace"' class = 'pt-5'>
+                    <b-icon :icon="classSymbol" font-scale="7"></b-icon>
+                </div>
+                <div v-else>
+                    <div v-for='(n,idx) in num' :key = 'idx' style = "display:inline-block" class="px-3 py-2">
+                        <b-icon :icon='classSymbol' font-scale='3'></b-icon>
+                    </div>
                 </div>
             </div>
             <span>{{pattern}}</span>

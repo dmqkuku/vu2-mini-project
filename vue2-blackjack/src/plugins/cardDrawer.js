@@ -135,7 +135,9 @@ const Pattern = {
 let cardDrawer = function draw(index){
     let nums = numGen();                                         //1에서  52까지...
     let pattern = Pattern[nums.Pattern];
-    if(nums.Number == 11){
+    if(nums.Number == 1){
+        pattern += " " + "Ace"
+    }else if(nums.Number == 11){
         pattern += " " + "Jack"
     }else if(nums.Number == 12){
         pattern += " " + "Queen"
