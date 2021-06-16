@@ -25,9 +25,6 @@ export default {
         hand : {
             type : Object,
         },
-        computedHand : {
-            type : Object
-        },
         idSn : {
             type : String
         },

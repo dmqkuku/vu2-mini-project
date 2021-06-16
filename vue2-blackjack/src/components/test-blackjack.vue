@@ -8,12 +8,10 @@
         <div v-show='!isGameEnd'>
             <div v-if="!gameStarted">
                 <input type="text" v-model='bet' placeholder="배팅할 점수를 입력하세요"/>
-
+                Bet : {{computedBet}}
                 <button variant="success" @click='fnStartGame'> start Game</button>
             </div>
-            
-            <div v-else>   
-              
+            <div v-else>  
                 <div v-show='!isStay && !isBOB.userId.isBurst'>
                     <button variant="success" @click="fnHit">HIT</button>
                 </div>
@@ -23,11 +21,11 @@
             </div>
         </div>
         <div>
-            <BlackJackUser :hand='userHand' :computedHand='computedHand' idSn='userId' :drawnCardCount='drawnCardCount'></BlackJackUser>
+            <BlackJackUser :hand='userHand'  idSn='userId' :drawnCardCount='drawnCardCount'></BlackJackUser>
         </div>
             <hr />
         <div>
-            <BlackJackUser :hand='dealerHand' :computedHand='computedHand' idSn='dealer' :drawnCardCount='drawnCardCount'></BlackJackUser>
+            <BlackJackUser :hand='dealerHand'  idSn='dealer' :drawnCardCount='drawnCardCount'></BlackJackUser>
         </div>
     </div>
 </template>
@@ -37,6 +35,35 @@ import BlackJackUser from './blackjack-user.vue'
 import Vue from 'vue'
 
 let count = 1;
+let tempSave = []
+let proto_hand = {
+                [Symbol.iterator] : function(){
+                    return {
+                        index : 0,
+                        length : this.length,
+                        next : function(){
+                            if(this.index++ >= length){
+                                if(this['hand' + index] == 0){
+                                    return {done : true}
+                                } 
+                                return {value : this['hand' + index++], done : false}
+                            }else{
+                                return {done : true}
+                            }
+                        }
+                    }   
+                },
+                'hand1' : "0",
+                'hand2' : "0",
+                'hand3' : "0",
+                'hand4' : "0",
+                'hand5' : "0",
+                'hand6' : "0"
+            }
+let debouncing_var_start;
+let debouncing_var_hit;
+let debouncing_var_stay;
+let debouncing_var_new;
 export default {
     name : 'BlackJackMain',
     components : {
@@ -51,43 +78,70 @@ export default {
        
     },
     computed : {
-        
+        computedBet : function(){
+            if(this.bet < 0 || isNaN(this.bet)){
+                return 0;
+            }
+            if(this.bet > this.userScore){
+                return this.userScore
+            }else if(this.bet > this.dealerScore){
+                return this.dealerScore
+            }else if(this.bet <= this.userScore || this.bet <= this.dealerScore){
+                return this.bet
+            }
+        }
     }
     ,
     methods : {
         fnStartGame(){
-            this.$set(this.userHand, 'hand1', cardDrawer(1));
-
-            this.drawnCardCount.userId += 1;
-            this.$set(this.userHand, 'hand2', cardDrawer(2));
-            this.drawnCardCount.dealer += 1
-
-            this.drawnCardCount.userId += 1;
-            this.$set(this.dealerHand, 'hand1', cardDrawer(1));
-            this.drawnCardCount.dealer += 1;
-            this.$set(this.dealerHand, 'hand2', cardDrawer(2));
-
-            this.fnComputeUserHand(this.userHand, 'userId')
-            this.fnComputeUserHand(this.dealerHand, 'dealer')
-            this.fnIsBoB('userId')
-            this.fnIsBoB('dealer')
-
-            this.gameStarted = true
+            if(debouncing_var_start){
+                clearTimeout(debouncing_var_start)
+            }
+            debouncing_var_start = setTimeout(() => {
+                this.$set(this.userHand, 'hand1', cardDrawer(1));
+    
+                this.drawnCardCount.userId += 1;
+                this.$set(this.userHand, 'hand2', cardDrawer(2));
+                this.drawnCardCount.dealer += 1
+    
+                this.drawnCardCount.userId += 1;
+                this.$set(this.dealerHand, 'hand1', cardDrawer(1));
+                this.drawnCardCount.dealer += 1;
+                this.$set(this.dealerHand, 'hand2', cardDrawer(2));
+    
+                this.fnComputeUserHand(this.userHand, 'userId')
+                this.fnComputeUserHand(this.dealerHand, 'dealer')
+                this.fnIsBoB('userId')
+                this.fnIsBoB('dealer')
+    
+                this.gameStarted = true
+            }, 200)
         },
         fnHit() {
-            let idx = 2 + count++
-            this.$set(this.userHand, 'hand' + idx, cardDrawer(idx));
-
-            this.drawnCardCount.userId += 1;
-
-            this.fnComputeUserHand(this.userHand, 'userId');
-            this.fnIsBoB('userId')
+            if(debouncing_var_hit){
+                clearTimeout(debouncing_var_hit)
+            }
+            debouncing_var_hit = setTimeout(() => {
+                let idx = 2 + count++
+                this.$set(this.userHand, 'hand' + idx, cardDrawer(idx));
+    
+                this.drawnCardCount.userId += 1;
+    
+                this.fnComputeUserHand(this.userHand, 'userId');
+                this.fnIsBoB('userId')
+            }, 200)
         },
         fnComputeUserHand(hand, id){
             let sum = 0;
             for(let elem in hand){
                 let temp = parseInt((hand[elem].split(' ')[2]));
-                if(temp < 11){
+                if(temp == 1){
+                    if(this.computedHand[id] <= 11){
+                        sum += 11
+                    }else{
+                        sum += 1
+                    }
+                }else if(temp < 11 ){
                     sum += temp
                 }else if(temp >= 11){
                     sum += 10
@@ -132,13 +186,17 @@ export default {
             }
 
             if(winner == 'userId'){
-                this.userScore +=  this.bet * 2
-                this.dealerScore -= this.bet
+                tempSave.push(this.userScore +  (this.computedBet * 2))
+                tempSave.push(this.dealerScore - this.computedBet)
+                this.userScore = tempSave[0];
+                this.dealerScore = tempSave[1];
             }else if(winner == 'dealer'){
-                this.userScore -= this.bet
-                this.dealerScore += this.bet * 2
+                tempSave.push(this.userScore - this.computedBet)
+                tempSave.push(this.dealerScore + (this.computedBet * 2))
+                this.userScore = tempSave[0];
+                this.dealerScore = tempSave[1];
             }else{
-                this.userScore -= this.bet
+                this.userScore -= this.computedBet
             }
             this.isGameEnd = true;
             
@@ -182,15 +240,26 @@ export default {
            
         },
         fnStay(){
-            this.fnDealerTurn()
-            setTimeout(() => {
-                this.fnIsWin()
-            }, this.dealerCardDraw * 3000)
+            if(debouncing_var_stay){
+                clearTimeout(debouncing_var_stay)
+            }
+            debouncing_var_stay = setTimeout(() => {
+                this.fnDealerTurn()
+                setTimeout(
+                    this.fnIsWin
+                , this.dealerCardDraw * 3000)
+            }, 200)
  
         },
          fnStartNewGame(){
-            Object.assign(this.$data, initialState())
-            count = 1;
+            if(debouncing_var_start){
+                 clearTimeout(debouncing_var_new)
+            }
+            debouncing_var_start = setTimeout(() => {
+                Object.assign(this.$data, initialState())
+                count = 1;
+                tempSave = []
+            }, 200)
         },
 
     },
@@ -204,30 +273,7 @@ function initialState(){
             isStay : false,
             isGameEnd : false,
             dealerCardDraw : 0,
-            userHand : {
-                [Symbol.iterator] : function(){
-                    return {
-                        index : 0,
-                        length : this.length,
-                        next : function(){
-                            if(this.index++ >= length){
-                                if(this['hand' + index] == 0){
-                                    return {done : true}
-                                } 
-                                return {value : this['hand' + index++], done : false}
-                            }else{
-                                return {done : true}
-                            }
-                        }
-                    }   
-                },
-                'hand1' : "0",
-                'hand2' : "0",
-                'hand3' : "0",
-                'hand4' : "0",
-                'hand5' : "0",
-                'hand6' : "0"
-            },
+            userHand : Object.create(proto_hand),
             drawnCardCount : {
                 'userId' : 0,
                 'dealer' : 0
@@ -238,30 +284,7 @@ function initialState(){
                 'userId' : 0,
                 'dealer' : 0
             },
-            dealerHand : {
-                [Symbol.iterator] : function(){
-                    return {
-                        index : 0,
-                        length : this.length,
-                        next : function(){
-                            if(this.index++ >= length){
-                                if(this['hand' + index] == 0){
-                                    return {done : true}
-                                }
-                                return {value : this['hand' + index++], done : false}
-                            }else{
-                                return {done : true}
-                            }
-                        }
-                    }
-                },
-                'hand1' : "0",
-                'hand2' : "0",
-                'hand3' : "0",
-                'hand4' : "0",
-                'hand5' : "0",
-                'hand6' : "0"
-            },
+            dealerHand : Object.create(proto_hand),
             
             
             isBOB : {
