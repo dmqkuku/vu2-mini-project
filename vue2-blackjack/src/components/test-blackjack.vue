@@ -34,7 +34,7 @@
 <script>
 import cardDrawer from '../plugins/cardDrawer'
 import BlackJackUser from './blackjack-user.vue'
-
+import Vue from 'vue'
 
 let count = 1;
 export default {
@@ -143,40 +143,50 @@ export default {
             this.isGameEnd = true;
             
         },
-        fnStay(){
+        beforeUpdate: function() {
+
+        },
+        updated : function(){
+            
+        }
+        ,
+        fnDealerTurn(){
             this.isStay = true;
             count = 1;
-            if(!this.isBOB.userId.isBlackJack && !this.isBOB.userId.isBurst && (this.computedHand.dealer < 16 || this.computedHand.dealer < this.computedHand.userId)){
-                this.fnDealerDraw().then((res) => {
+            if(!this.isBOB.userId.isBlackJack && !this.isBOB.userId.isBurst && (this.computedHand.dealer < 17 || this.computedHand.dealer < this.computedHand.userId)){
+                    this.dealerCardDraw += 1
+                    this.fnDealerDraw();
                     this.fnComputeUserHand(this.dealerHand, 'dealer')
                     this.drawnCardCount.dealer += 1;
                     this.fnIsBoB('dealer')
-                    console.log("dealer draw!")
-                })
+                   
             }
-             if(!this.isBOB.userId.isBlackJack && !this.isBOB.userId.isBurst && (this.computedHand.dealer < 16 || this.computedHand.dealer < this.computedHand.userId)){
-                this.fnDealerDraw().then((res) => {
+             if(!this.isBOB.userId.isBlackJack && !this.isBOB.userId.isBurst && (this.computedHand.dealer < 17 || this.computedHand.dealer < this.computedHand.userId)){
+                    this.dealerCardDraw += 1
+                    this.fnDealerDraw();
                     this.fnComputeUserHand(this.dealerHand, 'dealer')
                     this.drawnCardCount.dealer += 1;
                     this.fnIsBoB('dealer')
-                    console.log("dealer draw!")
-                })
-                
-            }
-            setTimeout(this.fnIsWin, 8000);
+                    
+                }else{
+                 
+                }
+            
         },
         fnDealerDraw(){
             let idx = 2 + count++
             this.$set(this.dealerHand, 'hand' + idx, cardDrawer(idx));
             this.fnComputeUserHand(this.dealerHand, 'dealer');
             this.fnIsBoB('dealer');
-            return new Promise((resolve, reject) => {
-                setTimeout( () => {
-                    console.log("calculating dealer");
-                    resolve();
-                }, 3000)
-            })
+            
            
+        },
+        fnStay(){
+            this.fnDealerTurn()
+            setTimeout(() => {
+                this.fnIsWin()
+            }, this.dealerCardDraw * 3000)
+ 
         },
          fnStartNewGame(){
             Object.assign(this.$data, initialState())
@@ -193,6 +203,7 @@ function initialState(){
             gameStarted : false,
             isStay : false,
             isGameEnd : false,
+            dealerCardDraw : 0,
             userHand : {
                 [Symbol.iterator] : function(){
                     return {

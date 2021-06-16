@@ -1,6 +1,6 @@
 <template>
     <b-card :class='classObject' class='mx-2 my-2' style='min-width:18rem; max-width:18rem; max-height:25rem; min-height: 25rem'>
-        <div>
+        <div v-show='!isHide'>
             <span>{{numPtn}}</span>
             <div style="height:20rem">
                 <div v-for='(n,idx) in num' :key = 'idx' style = "display:inline-block" class="px-3 py-2">
@@ -24,6 +24,9 @@ export default {
         },
         num : {
             type : Number
+        },
+        isHide : {
+            type : Boolean
         }
     },
     data(){
@@ -33,6 +36,11 @@ export default {
     },
     computed : {
         classObject : function(){
+            if(this.isHide){
+                return {
+                    'hide' : true
+                }
+            }
             return{
                 'club' : this.pattern == 'Clover' ,
                 'heart' : this.pattern == 'Heart' ,
@@ -42,6 +50,9 @@ export default {
         },
         classSymbol : function(){
             let {club = false, heart = false, diamond = false, spade = false} = this.classObject;
+            if(this.isHide){
+                return "blank"
+            }
             if(club){
                 return 'suit-club'
             }
@@ -61,6 +72,10 @@ export default {
 }
 </script>
 <style scoped>
+    .hide {
+        background-color: grey;
+        border : black;
+    }
     .diamond{
         border : black solid 2px;
     }

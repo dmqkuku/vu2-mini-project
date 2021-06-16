@@ -6,7 +6,7 @@
             <div v-for="(elem, idx) in unWrappedHandNumPtn" :key='idx'>
                 <transition name="slide-fade" appear appear-class="slide-fade-enter" appear-active-class="slide-fade-etner-active">
                     
-                    <BlackJackCard :numPtn='elem' :pattern='unWrappedHandPtn[idx]' :num='unWrappedHand[idx]'></BlackJackCard>
+                    <BlackJackCard :numPtn='elem' :pattern='unWrappedHandPtn[idx]' :num='unWrappedHand[idx]' :isHide='idx==0 && idSn == "dealer"'></BlackJackCard>
                 </transition>            
             </div>
         </b-card-group>
@@ -38,7 +38,7 @@ export default {
     data : {
         unWrappedHandNumPtn : [],
         unWrappedHandPtn : [],
-        unWrappedHand : []
+        unWrappedHand : [],
     },
     computed : {
         unWrappedHandNumPtn : function(){
